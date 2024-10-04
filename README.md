@@ -114,6 +114,7 @@ By attaching this managed policy, you ensure that your Lambda function has the a
         else:
             raise ValueError(f'Unrecognized operation "{operation}"')
     ```
+![Insert Lambda Code](aws-serverless-microservice/img/lambda-code-paste.png)
 
 ### Step 3: Test the Lambda Function
 
