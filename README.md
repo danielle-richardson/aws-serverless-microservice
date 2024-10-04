@@ -234,8 +234,8 @@ Now that our Lambda function is ready, we can use the **create** operation to ad
     "tableName": "lambda-apigateway",
     "payload": {
         "Item": {
-            "id": "1234ABCD",
-            "number": 5
+            "id": "TEST2024",
+            "number": 24
         }
     }
 }
@@ -251,7 +251,7 @@ To test the API locally with Postman (download it if you don’t have it):
 3. In the Body tab, select raw and choose JSON from the dropdown.
 4. Paste the above JSON request in the body and click Send.
 
-![Create Postman](img/postman-create.png)
+![Create Postman](img/postman-setup.png)
 
 If everything is set up correctly, you should get a response with HTTP Status Code 200, confirming that the item was created successfully.
 
