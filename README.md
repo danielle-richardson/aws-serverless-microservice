@@ -2,6 +2,7 @@
 
 This project demonstrates how to build a serverless API using **AWS Lambda**, **DynamoDB**, and **API Gateway**. The API supports CRUD operations on a DynamoDB table, using Lambda as the backend logic.
 
+![Serverless Diagram](img/serverless-diagram.png)
 ---
 
 ## Overview and High-Level Design
