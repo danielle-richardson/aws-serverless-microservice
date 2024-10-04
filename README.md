@@ -32,53 +32,68 @@ In this tutorial, you will:
 
 ### Step 1: Create a Lambda IAM Role
 
-The Lambda function requires permissions to interact with **DynamoDB** for CRUD operations and **CloudWatch Logs** for logging. We will split these into two policies:
+Before assigning permissions, you need to create a role for the Lambda function. This role will allow the Lambda function to interact with **DynamoDB** and **CloudWatch Logs**. We will split the permissions into two policies:
 
 1. **Custom DynamoDB Policy**: Granting specific CRUD access to the DynamoDB table.
 2. **AWS Managed CloudWatch Logs Policy**: Use the AWS-managed policy `AWSLambdaBasicExecutionRole` for logging permissions.
 
-#### Step 1.1: Create a Custom DynamoDB Policy
+#### Step 1.1: Open the IAM Console and Create a Role
 
-Create a custom policy that grants **CRUD access** to your specific DynamoDB table (`lambda-apigateway`). Use the following policy JSON:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "DynamoDBAccess",
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:PutItem",
-        "dynamodb:GetItem",
-        "dynamodb:UpdateItem",
-        "dynamodb:DeleteItem",
-        "dynamodb:Scan"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-```
-> **Disclaimer: Why `*` in Resource:**
->
-> At this point, we haven’t created the DynamoDB table yet, so we don't have the specific Amazon Resource Name (ARN). For now, we'll allow access to all DynamoDB tables using `*`. Once the DynamoDB table is created, we will update this policy to target the exact ARN of the specific table.
+1. Open the **IAM Console**.
+2. Select **Roles**.
+3. Click on the **Create Role** button.
+4. For **Trusted entity type**, choose **AWS service** and then select **Lambda** as the use case (since this role is for a Lambda function).
+5. Click **Next: Permissions**.
 
 #### Step 1.2: Attach AWS Managed CloudWatch Logs Policy
 
 For logging permissions, we will use the AWS-managed policy **`AWSLambdaBasicExecutionRole`**, which provides the necessary permissions for **CloudWatch Logs** without needing to define a custom policy.
 
-1. Go to the **IAM Console** and navigate to the **lambda-dynamodb-execution-role**.
-2. Click **Add permissions**.
-3. In the search bar, type **`AWSLambdaBasicExecutionRole`** and select the managed policy from the list.
-4. Click **Attach policy**.
+1. In the search bar, type **`AWSLambdaBasicExecutionRole`** and select the managed policy from the list.
+2. Click **Next**.
+3. In the **Role name** field, provide a meaningful name for the role, for example: **`lambda-dynamodb-execution-role`**.
+4. Click **Create role**.
 
 This AWS-managed policy allows Lambda to:
 - **Create log groups**.
 - **Create log streams**.
 - **Put log events** (i.e., write logs to CloudWatch).
 
-By attaching this managed policy, you ensure that your Lambda function has the appropriate permissions for CloudWatch logging without over-provisioning.
+#### Step 1.3: Create a Custom DynamoDB Policy
+
+1. After the role is created, navigate to the role you just created.
+2. Click **Add permissions**, then select **Create inline policy**.
+3. In the policy editor, switch to the **JSON** tab and paste the following JSON policy:
+
+    ```json
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "DynamoDBAccess",
+          "Effect": "Allow",
+          "Action": [
+            "dynamodb:PutItem",
+            "dynamodb:GetItem",
+            "dynamodb:UpdateItem",
+            "dynamodb:DeleteItem",
+            "dynamodb:Scan"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+    ```
+
+4. Click **Next**.
+5. Provide a meaningful name for the policy (e.g., **`LambdaDynamoDBCRUDPolicy`**).
+6. Click **Create policy**.
+
+This custom policy grants your Lambda function CRUD access to your DynamoDB table.
+
+> **Disclaimer: Why `*` in Resource:**
+>
+> At this point, we haven’t created the DynamoDB table yet, so we don't have the specific Amazon Resource Name (ARN). For now, we'll allow access to all DynamoDB tables using `*`. Once the DynamoDB table is created, we will update this policy to target the exact ARN of the specific table.
 
 ### Step 2: Create the Lambda Function
 
@@ -87,7 +102,11 @@ By attaching this managed policy, you ensure that your Lambda function has the a
    - **Runtime**: Python 3.12
    - **Permissions**: Attach the `lambda-dynamodb-execution-role` created earlier.
 
-2. Replace the default code with the following:
+![Create Lambda Function](img/lambda-create.png)
+
+2. Click **Create function**
+
+3. Replace the default code with the following:
 
     ```python
     import boto3
@@ -114,13 +133,19 @@ By attaching this managed policy, you ensure that your Lambda function has the a
         else:
             raise ValueError(f'Unrecognized operation "{operation}"')
     ```
-![Insert Lambda Code](aws-serverless-microservice/img/lambda-code-paste.png)
+![Update Lambda Code](img/lambda-code-paste.png)
+
+4. Click **Deploy**
 
 ### Step 3: Test the Lambda Function
 
 Let's test the Lambda function by performing an echo operation before we connect it to DynamoDB.
 
-1. In the Lambda Console, configure a test event using the following JSON:
+1. In the Lambda Console, configure a test event by clicking the **Test** button.
+2. In the **Configure test event** window, select **Create new event**.
+3. For the Event name, enter a name such as **`echotest`**.
+4. In the **Event JSON** section, paste the following JSON:
+
     ```json
     {
         "operation": "echo",
@@ -130,8 +155,14 @@ Let's test the Lambda function by performing an echo operation before we connect
         }
     }
     ```
+![Config Test Event Screen](img/config-test-event.png)
 
-2. Run the test, and the output should echo back the payload.
+6. Click **Save**.
+7. After running the test, you should see the output in the console.
+
+![Test Successful](img/test-succeeded.png)
+
+This test confirms that the Lambda function is working properly by echoing the payload you send it.
 
 ---
 
@@ -146,6 +177,8 @@ Next, create the DynamoDB table that will be used by the Lambda function:
    - **Primary key**: `id` (string)
 4. Click **Create**.
 
+![Create Dynamo Table](img/dynamo-create.png)
+
 ---
 
 ## Create the API in API Gateway
@@ -155,16 +188,22 @@ Next, create the DynamoDB table that will be used by the Lambda function:
 3. Select **REST API**, then click **Build**.
 4. Name the API **DynamoDBOperations**, and click **Create API**.
 
+![Create API](img/create-api.png)
+
 ### Create API Resources
 
-1. Click **Actions** > **Create Resource**.
-2. Set **Resource Name** to `DynamoDBManager`, and click **Create Resource**.
+1. Click **Create Resource**.
+2. Set **Resource Name** to `dynamodbmanager`, and click **Create Resource**.
+
+![Create API Resource](img/create-api-resource.png)
 
 ### Create POST Method for API
 
-1. With the `/DynamoDBManager` resource selected, click **Actions** > **Create Method**.
+1. With the `/dynamodbmanager` resource selected, click **Actions** > **Create Method**.
 2. Select **POST** from the dropdown, then select the **LambdaFunctionOverHttps** Lambda function.
 3. Save the integration and allow API Gateway to invoke the Lambda function.
+
+![Create API Method](img/create-api-method.png)
 
 ---
 
@@ -172,6 +211,8 @@ Next, create the DynamoDB table that will be used by the Lambda function:
 
 1. In **API Gateway**, click **Actions** > **Deploy API**.
 2. Create a new stage called `Prod`, and click **Deploy**.
+
+![Create API Stage](img/create-api-stage.png)
 
 ---
 
