@@ -207,20 +207,147 @@ Next, create the DynamoDB table that will be used by the Lambda function:
 
 ---
 
-## Deploy the API
+### Deploy the API
 
 1. In **API Gateway**, click **Actions** > **Deploy API**.
 2. Create a new stage called `Prod`, and click **Deploy**.
 
 ![Create API Stage](img/create-api-stage.png)
 
+3. To use the API, you’ll need the **endpoint URL**. In the API Gateway console, go to the **Stages** section, expand the **Prod** stage, select the **POST** method, and copy the **Invoke URL** displayed on the screen.
+
+![Copy Invoke URL](img/invoke-url.png)
+
+> **Important:** Make sure to copy the **POST method's Invoke URL**, not the one for the **Prod** stage itself. The URL associated with the **POST** method is the one you will use to interact with the API.
+
+You will need this **Invoke URL** for testing your API in Postman or Curl in the following steps.
+
 ---
 
-## Running the Solution
+## Running Our Solution
 
-You can now use Postman or Curl to interact with your API and DynamoDB.
+Now that our Lambda function is ready, we can use the **create** operation to add an item to our DynamoDB table. Here's the JSON we'll use to make this request:
 
-### Example Request - Create Item (Curl)
+```json
+{
+    "operation": "create",
+    "tableName": "lambda-apigateway",
+    "payload": {
+        "Item": {
+            "id": "1234ABCD",
+            "number": 5
+        }
+    }
+}
+```
+You can send this POST request using tools like Postman or Curl. Here's how you can do it:
+
+#### Option 1: Using Postman
+
+To test the API locally with Postman (download it if you don’t have it):
+
+1. Set the request method to POST.
+2. Paste your API's invoke URL (you'll find this in the API Gateway console under the deployed stage).
+3. In the Body tab, select raw and choose JSON from the dropdown.
+4. Paste the above JSON request in the body and click Send.
+
+![Create Postman](img/postman-create.png)
+
+If everything is set up correctly, you should get a response with HTTP Status Code 200, confirming that the item was created successfully.
+
+![Complete Postman](img/postman-complete.png)
+
+### Option 2: Using Curl
+
+Alternatively, you can use Curl from the terminal to make the request. Run the following command (fill in the necessary data):
 
 ```bash
-curl -X POST -d "{\"operation\":\"create\",\"tableName\":\"lambda-apigateway\",\"payload\":{\"Item\":{\"id\":\"1\",\"name\":\"Bob\"}}}" https://<API_ID>.execute-api.<REGION>.amazonaws.com/prod/DynamoDBManager
+$ curl -X POST -d "{\"operation\":\"create\",\"tableName\":\"lambda-apigateway\",\"payload\":{\"Item\":{\"id\":\"1\",\"name\":\"Bob\"}}}" https://$API.execute-api.$REGION.amazonaws.com/prod/DynamoDBManager
+```
+This command sends the same create request to your API. If successful, you'll receive a confirmation in the terminal.
+
+### Verifying the Data
+To confirm that the data was added to your DynamoDB table:
+
+1. Open the DynamoDB Console and click on **Tables**.
+2. Go to the lambda-apigateway table.
+3. Select the **Explore table items** tab to see the newly inserted item.
+
+![View Dynamo Items](img/dynamo-items.png)
+
+### Retrieve All Items from DynamoDB
+
+To get all the items that have been inserted into your DynamoDB table, use the **list** operation in the same API.
+
+1. In **Postman** (or your API testing tool), select **POST** as the method.
+2. Use the **Invoke URL** for the **POST** method from your deployed API (as explained earlier).
+3. In the **Body** section, choose **raw** and select **JSON** format.
+4. Enter the following JSON request to retrieve all items from the DynamoDB table:
+
+    ```json
+    {
+        "operation": "list",
+        "tableName": "lambda-apigateway",
+        "payload": {}
+    }
+    ```
+
+5. Click **Send**. If successful, the API will return a response with all the items currently in your DynamoDB table.
+
+By following these steps, you can use the **list** operation to see all the items stored in the table.
+
+With this, you've successfully built and tested a serverless API using **API Gateway**, **Lambda**, and **DynamoDB**!
+
+---
+
+### Enable CloudWatch Logging for Lambda
+
+To monitor your Lambda function's execution and track errors, you can use **CloudWatch Logs**. This will help you analyze each function invocation, making it easier to debug issues and optimize performance.
+
+#### Viewing CloudWatch Logs
+
+1. Open the **CloudWatch Console**.
+2. In the left-hand menu, select **Logs** and then click on **Log groups**.
+3. Find the log group for your Lambda function (it will have the format `/aws/lambda/{your-function-name}`).
+4. Click on the log group to see the log streams for each function invocation.
+
+From here, you can inspect logs for errors, performance insights, and debugging information.
+
+#### Testing CloudWatch Logs
+
+To ensure CloudWatch logging is working correctly:
+
+1. Invoke your Lambda function (you can do this by running your **create** or **list** operation through Postman or Curl).
+2. Return to **CloudWatch Logs** and refresh the **Log group**.
+3. You should see a new log stream for the most recent Lambda invocation. Click the log stream to view the logs generated during the function execution.
+
+By following these steps, you'll be able to monitor and debug your Lambda function using **CloudWatch Logs**.
+
+---
+
+## Cleanup Resources
+
+Now that we've completed the project, it's time to clean up the resources we created to avoid incurring unnecessary costs.
+
+#### Delete the DynamoDB Table
+
+1. Go to the **DynamoDB Console**.
+2. Select the table named **lambda-apigateway**.
+3. Click on **Actions** and choose **Delete table**.
+4. Confirm the deletion to remove the table.
+
+#### Delete the Lambda Function
+
+1. Open the **Lambda Console**.
+2. Select the Lambda function **LambdaFunctionOverHttps**.
+3. Click **Actions** and select **Delete**.
+4. Confirm the deletion to remove the Lambda function.
+
+#### Delete the API in API Gateway
+
+1. Go to the **API Gateway Console**.
+2. Under **APIs**, select the API named **DynamoDBOperations**.
+3. Click **Actions** and choose **Delete**.
+4. Confirm the deletion to remove the API.
+
+By completing these steps, you'll successfully remove all the resources created for this lab, preventing any further charges.
