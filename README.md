@@ -15,7 +15,7 @@ The architecture consists of the following AWS services:
 4. **CloudWatch Logs**: For logging Lambda execution.
 
 In this tutorial, you will:
-- Create an API with one resource (`DynamoDBManager`) and one method (`POST`).
+- Create an API with one resource (`dynamodbmanager`) and one method (`POST`).
 - Invoke Lambda functions via API Gateway to perform operations on DynamoDB, including create, read, update, delete, and list items.
 
 ---
@@ -217,7 +217,7 @@ Next, create the DynamoDB table that will be used by the Lambda function:
 
 3. To use the API, you’ll need the **endpoint URL**. In the API Gateway console, go to the **Stages** section, expand the **Prod** stage, select the **POST** method, and copy the **Invoke URL** displayed on the screen.
 
-![Copy Invoke URL](img/invoke-url.png)
+![Copy Invoke URL](img/copy-invoke-url.png)
 
 > **Important:** Make sure to copy the **POST method's Invoke URL**, not the one for the **Prod** stage itself. The URL associated with the **POST** method is the one you will use to interact with the API.
 
